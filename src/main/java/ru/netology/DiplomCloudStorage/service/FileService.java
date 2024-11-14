@@ -25,8 +25,10 @@ public class FileService {
     private final AuthRepository authRepository;
     private final LoginRepository loginRepository;
 
+
     @Transactional
-    public void uploadFile(User user, String fileName, MultipartFile file) {
+    public void uploadFile(String token, String fileName, MultipartFile file) {
+        final  User user = getUserFromToken(token);
         try {
             fileRepository.save(new StorageFile(fileName, LocalDateTime.now(), file.getSize(), file.getBytes(), user));
             log.info("Successfully uploaded file. User: {}", user.getUsername());
@@ -37,7 +39,8 @@ public class FileService {
     }
 
     @Transactional
-    public void deleteFile(User user, String filename) {
+    public void deleteFile(String token, String filename) {
+        final  User user = getUserFromToken(token);
         fileRepository.deleteByUserAndFilename(user, filename);
         StorageFile storageFile = fileRepository.findByUserAndFilename(user, filename);
         if (storageFile != null) {
@@ -48,7 +51,8 @@ public class FileService {
     }
 
     @Transactional
-    public byte[] downloadFile(User user, String filename) {
+    public byte[] downloadFile(String token, String filename) {
+        final  User user = getUserFromToken(token);
         StorageFile storageFile = fileRepository.findByUserAndFilename(user, filename);
         if (storageFile == null) {
             log.error("Download file: Input data exception");
@@ -59,7 +63,8 @@ public class FileService {
     }
 
     @Transactional
-    public void updateFilename(User user, String fileName, FileDataApply fileDataApply) {
+    public void updateFilename(String token, String fileName, FileDataApply fileDataApply) {
+        final  User user = getUserFromToken(token);
         fileRepository.updateFilenameByUser(user, fileName, fileDataApply.getFilename());
         StorageFile storageFile = fileRepository.findByUserAndFilename(user, fileName);
         if (storageFile != null) {
@@ -70,8 +75,18 @@ public class FileService {
     }
 
     @Transactional
-    public List<StorageFile> getAllFiles(User user, Integer limit) {
+    public List<StorageFile> getAllFiles(String token, Integer limit) {
+        final  User user = getUserFromToken(token);
         log.info("Successfully fetched all files. User: {}", user.getUsername());
         return fileRepository.findAllByUser(user);
+    }
+
+    public User getUserFromToken(String token) {
+        if (token.startsWith("Bearer ")) {
+            String authTokenBearer = token.split(" ")[1];
+            String userName = authRepository.getUsernameByToken(authTokenBearer);
+            return loginRepository.findByUsername(userName);
+        }
+        return null;
     }
 }

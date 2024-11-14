@@ -18,6 +18,8 @@ public class AuthController {
 
     private final AuthService authService;
 
+
+
     @PostMapping(value = "/login")
     public GetToken login(@RequestBody LoginAuth login) {
         return authService.login(login);

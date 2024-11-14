@@ -45,12 +45,4 @@ public class AuthService {
         authRepository.removeTokenAndUsername(token);
     }
 
-    public User getUserFromToken(String token) {
-        if (token.startsWith("Bearer ")) {
-            String authTokenBearer = token.split(" ")[1];
-            String userName = authRepository.getUsernameByToken(authTokenBearer);
-            return loginRepository.findByUsername(userName);
-        }
-        return null;
-    }
 }
